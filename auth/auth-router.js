@@ -2,6 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 
 const Users = require('../users/users-model.js');
+const restricted = require('../auth/restricted-middleware');
 
 // for endpoints beginning with /api/auth
 router.post('/register', (req, res) => {
@@ -25,11 +26,11 @@ router.post('/login', (req, res) => {
     .first()
     .then(user => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        res.status(200).json({
-          message: `Welcome ${user.username}!`,
-        });
+        req.session.user = user; // save user information so cookie will be saved from session and sent back to client. client stores and sends all related cookies from that domain
+        // console.log(req.session);
+        res.status(200).json({ message: `Welcome ${user.username}!` });
       } else {
-        res.status(401).json({ message: 'Invalid Credentials' });
+        res.status(401).json({ message: 'Invalid Credentials.' });
       }
     })
     .catch(error => {
